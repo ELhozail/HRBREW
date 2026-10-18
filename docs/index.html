@@ -27,7 +27,7 @@
       <div class="hero-kicker"><span class="kicker-line"></span> מידע אישי לתלמידים <span class="kicker-line"></span></div>
       <h1>תוצאות המבחן<span class="heading-dot">.</span></h1>
       <p class="intro">באקדמיזציה בתיכון בשפה העברית</p>
-      <p class="subintro">לצפייה בתוצאה האישית, יש להזין מספר זהות וקוד אישי שקיבלת מבית הספר.</p>
+      <p class="subintro">לצפייה בתוצאה האישית, יש להזין את מספר הזהות המלא.</p>
 
       <section class="search-card" aria-labelledby="search-title">
         <div class="card-topline"><span class="step-indicator">01</span><span id="search-title">איתור תוצאות אישיות</span></div>
@@ -38,11 +38,7 @@
             <input id="student-id" name="studentId" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{9,10}" dir="ltr" placeholder="000000000" aria-describedby="id-help" required>
           </div>
           <p id="id-help" class="field-help">יש להזין את כל הספרות בדיוק כפי שקיבלת מבית הספר (9 או 10 ספרות).</p>
-          <div id="pin-field" class="pin-field">
-            <label for="student-pin">קוד אישי</label>
-            <div class="input-wrap"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg><input id="student-pin" name="pin" type="password" autocomplete="off" dir="ltr" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" minlength="20" maxlength="40" required></div>
-          </div>
-          <p class="secure-hint"><span class="lock" aria-hidden="true">🔒</span><span>המידע מוצפן באתר. אין צורך בחיבור לשרת נתונים. לשמירה על פרטיותך, אין למסור את הקוד האישי לאחרים.</span></p>
+          <p class="secure-hint"><span class="lock" aria-hidden="true">ⓘ</span><span>לשמירה על פרטיותך, אין לשתף את מספר הזהות או את תוצאות הבדיקה. הכניסה על בסיס מספר זהות בלבד אינה אימות זהות מאובטח.</span></p>
           <button id="submit-btn" class="primary-button" type="submit"><span>הצגת התוצאה</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </form>
         <div id="alert" role="alert" aria-live="polite" class="alert" hidden></div>

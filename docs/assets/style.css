@@ -12,10 +12,8 @@
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
 /* Offline-only version: no external styles or fonts. */
-#pin-field[hidden],#result[hidden],#alert[hidden]{display:none!important}
-#pin-field{margin-top:8px}
-#student-pin{font-size:17px;letter-spacing:.05em}
+#result[hidden],#alert[hidden]{display:none!important}
 .secure-hint{display:flex;align-items:flex-start;gap:8px;color:#567c7c;font-size:13px;line-height:1.8;background:#eaf7f3;padding:12px 15px;border-radius:10px;margin:0 0 23px}
 .secure-hint .lock{flex:none;font-size:17px}
 #loading-note{font-size:12px;margin-top:14px;text-align:center;color:#71948e}
-@media(max-width:570px){#student-pin{font-size:15px;letter-spacing:0}.secure-hint{font-size:12px}}
+@media(max-width:570px){.secure-hint{font-size:12px}}

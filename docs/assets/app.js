@@ -8,41 +8,49 @@
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   const digits = (value) => String(value || '').replace(/\D/g, '');
-  const normalizeCode = (value) => String(value || '').toUpperCase().replace(/[\s-]/g, '');
   const showMessage = (message) => { alertBox.textContent = message; alertBox.hidden = !message; };
   const bytesToHex = (bytes) => Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   const fromBase64 = (value) => Uint8Array.from(atob(value), c => c.charCodeAt(0));
-  const sha256 = async (text) => new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(text)));
+  const sha256 = async (bytes) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
 
   $('student-id').addEventListener('input', () => {
     $('student-id').value = digits($('student-id').value).slice(0, 10);
   });
 
-  const lookup = async (id, code) => {
-    const indexHash = bytesToHex(await sha256(`HEB-ACA-2026|lookup|${id}|${code}`));
-    const match = data.entries[indexHash];
+  const lookup = async (id) => {
+    const base = await crypto.subtle.importKey('raw', encoder.encode(id), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', hash: 'SHA-256', iterations: data.iterations, salt: fromBase64(data.salt) },
+      base, 256
+    );
+    const seed = new Uint8Array(bits);
+    const concatenated = (prefix) => {
+      const a = encoder.encode(prefix);
+      const out = new Uint8Array(a.length + seed.length);
+      out.set(a);
+      out.set(seed, a.length);
+      return out;
+    };
+    const index = bytesToHex(await sha256(concatenated('HEBREW-ACA-LOOKUP-2026|')));
+    const match = data.entries[index];
     if (!match) return null;
-    const rawKey = await sha256(`HEB-ACA-2026|aes-key|${id}|${code}`);
-    const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+    const keyBytes = await sha256(concatenated('HEBREW-ACA-AES-2026|'));
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['decrypt']);
     try {
-      const plaintext = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: fromBase64(match.iv) },
-        key,
-        fromBase64(match.ct)
+      const plain = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: fromBase64(match.iv) }, key, fromBase64(match.ct)
       );
-      const student = JSON.parse(decoder.decode(plaintext));
-      if (student.id !== id || !['בתכנית','לא בתכנית'].includes(student.status)) return null;
+      const student = JSON.parse(decoder.decode(plain));
+      if (student.id !== id || !['בתכנית', 'לא בתכנית'].includes(student.status)) return null;
       return student;
-    } catch (_) {
-      return null;
-    }
+    } catch (_) { return null; }
   };
 
   const showResult = (student) => {
     $('out-name').textContent = student.name;
     $('out-id').textContent = student.id;
     const enrolled = student.status === 'בתכנית';
-    $('out-status').textContent = enrolled ? 'בתכנית' : 'לא בתכנית';
+    $('out-status').textContent = student.status;
     $('out-status').className = 'status-pill ' + (enrolled ? 'accepted' : 'not-accepted');
     result.hidden = false;
     showMessage('');
@@ -61,16 +69,11 @@
     result.hidden = true;
     showMessage('');
     const id = digits($('student-id').value);
-    const code = normalizeCode($('student-pin').value);
     if (!/^\d{9,10}$/.test(id)) {
       showMessage('יש להזין מספר זהות מלא בן 9 או 10 ספרות.');
       return;
     }
-    if (!/^[A-HJ-NP-Z2-9]{20}$/.test(code)) {
-      showMessage('יש להזין את הקוד האישי בן 20 תווים שקיבלת מבית הספר.');
-      return;
-    }
-    if (!data || data.version !== 1 || !data.entries || !globalThis.crypto?.subtle) {
+    if (!data || data.version !== 2 || !data.entries || !globalThis.crypto?.subtle) {
       showMessage('לא ניתן לפתוח את המידע בדפדפן זה. יש לפתוח את האתר ב-HTTPS בדפדפן עדכני.');
       return;
     }
@@ -78,14 +81,14 @@
     button.disabled = true;
     button.querySelector('span').textContent = 'בודק/ת פרטים...';
     try {
-      const student = await lookup(id, code);
+      const student = await lookup(id);
       if (!student) {
-        showMessage('לא נמצאה תוצאה לפרטים שהוזנו. יש לבדוק את מספר הזהות ואת הקוד האישי או לפנות לבית הספר.');
+        showMessage('לא נמצאה תוצאה למספר הזהות שהוזן. יש לבדוק את המספר או לפנות לבית הספר.');
         return;
       }
       showResult(student);
-    } catch (err) {
-      showMessage('אירעה תקלה בפתיחת הנתונים. נא לרענן את הדף ולנסות שוב.');
+    } catch (_) {
+      showMessage('אירעה תקלה בפתיחת התוצאה. נא לרענן את הדף ולנסות שוב.');
     } finally {
       button.disabled = false;
       button.querySelector('span').textContent = 'הצגת התוצאה';
